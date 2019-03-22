@@ -1,3 +1,6 @@
 sudo apt install libnfc5 libnfc-bin libnfc-examples
 sudo apt-get remove gnome-terminal && sudo apt-get install gnome-terminal
 sudo pip install nfcpy
+
+#add @sudo python /you/location/of/file/healthCareEntry.py
+sudo nano /home/pi/.config/lxsession/LXDE-pi/autostart
