@@ -4,7 +4,7 @@ sudo apt-get update -y
 sudo apt-get upgrade -y
 
 sudo apt install libnfc5 libnfc-bin libnfc-examples -y
-sudo apt-get remove gnome-terminal && sudo apt-get install gnome-terminal
+sudo apt-get remove gnome-terminal && sudo apt-get install gnome-terminal -y
 sudo apt-get install python-pip
 sudo apt-get  install  libusb-dev  libpcsclite-dev  i2c-tools  -y
 
