@@ -28,12 +28,16 @@ def readBLEData(uuid):
     sleep(0.2)
 
     ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+    state = bleList.split(" ")[3]
     bleList = bleList.split(" ")[2]
     bleList = ansi_escape.sub('',bleList)
     a = ["sudo hciconfig hci0 reset", "sudo invoke-rc.d bluetooth restart","sudo hciconfig hci0 up","hciconfig"]
     for i in a:
         os.system(i)
-    bleValue =  subprocess.check_output(["sudo", "gatttool", "-b", bleList, "--char-read", "--uuid=%s"%uuid]).split("value: ")[1].split(" ")
+    if "random" in state:
+	bleValue =  subprocess.check_output(["sudo", "gatttool", "-t", "random", "-b", bleList, "--char-read", "--uuid=%s"%uuid]).split("value: ")[1].split(" ")
+    else:
+        bleValue =  subprocess.check_output(["sudo", "gatttool", "-b", bleList, "--char-read", "--uuid=%s"%uuid]).split("value: ")[1].split(" ")
     breakindex = None
     for i, str in enumerate(bleValue):
             breakindex = i
