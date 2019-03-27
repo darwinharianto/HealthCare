@@ -138,6 +138,18 @@ def logUser(userID):
     error = os.system(a)
     errorCheck(error)
 
+def loginUser(userID):
+
+    a = ("curl -X POST 52.193.188.33:8080/api/v1/in -H \"Accept: application/json\" -H \"Content-Type: application/json\" -d '{\"id\": \"%s\"}'" %userID)
+    error = os.system(a)
+    errorCheck(error)
+
+def logoutUser(userID):
+
+    a = ("curl -X POST 52.193.188.33:8080/api/v1/out -H \"Accept: application/json\" -H \"Content-Type: application/json\" -d '{\"id\": \"%s\"}'" %userID)
+    error = os.system(a)
+    errorCheck(error)
+
 def createUser(userID):
 
     a = ("curl -X POST 52.193.188.33:8080/api/v1/add -H \"Accept: application/json\" -H \"Content-Type: application/json\" -d '{\"id\":\"%s\", \"name\":\"sawada\", \"io\":\"0\"}'" %userID)
