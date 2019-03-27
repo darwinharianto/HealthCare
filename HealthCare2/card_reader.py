@@ -40,7 +40,7 @@ class CardReader_GPIO:
     def on_connect(self):
         self.proc = str(self.proc)
         self.idm = str(str(proc.split(":")[4:5]).replace(" ", "").split("\\n")[0][2:])
-        if (not (all(c in string.hexdigits for c in idm)) || len(idm) != 24):
+        if (not (all(c in string.hexdigits for c in idm)) OR len(idm) != 24):
             raise AttributeError("Not valid ID")
         
         
