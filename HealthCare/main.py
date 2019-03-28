@@ -19,7 +19,7 @@ oldConfig = config
 while True:
     try:
 	config = nfcctl.settingMode(config, "00000000-0000-0000-0000-000000000002")
-	
+        break
     except subprocess.CalledProcessError, e:
         print("Settting BLE Error")
         continue
