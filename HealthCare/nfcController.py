@@ -189,4 +189,4 @@ def testcommands():
 
 def updateWeight(userID, weight):
 
-    os.system("curl -X POST 52.193.188.33:8080/api/v1/bodyScale -H \"Accept: application/json\" -H \"Content-Type: application/json\" -d '{\"id\": \"%s\", \"weight\":%s}'" %(userID,weight))
+    os.system("curl -X POST 52.193.188.33:8080/api/v1/body_scale -H \"Accept: application/json\" -H \"Content-Type: application/json\" -d '{\"id\": \"%s\", \"weight\":%s}'" %(userID,weight))
