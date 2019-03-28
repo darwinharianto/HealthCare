@@ -140,13 +140,13 @@ def logUser(userID):
 
 def loginUser(userID):
 
-    a = ("curl -X POST 52.193.188.33:8080/api/v1/in -H \"Accept: application/json\" -H \"Content-Type: application/json\" -d '{\"id\": \"%s\"}'" %userID)
+    a = ("curl -X POST 52.193.188.33:8080/api/v1/entrance -H \"Accept: application/json\" -H \"Content-Type: application/json\" -d '{\"id\": \"%s\"}'" %userID)
     error = os.system(a)
     errorCheck(error)
 
 def logoutUser(userID):
 
-    a = ("curl -X POST 52.193.188.33:8080/api/v1/out -H \"Accept: application/json\" -H \"Content-Type: application/json\" -d '{\"id\": \"%s\"}'" %userID)
+    a = ("curl -X POST 52.193.188.33:8080/api/v1/exit -H \"Accept: application/json\" -H \"Content-Type: application/json\" -d '{\"id\": \"%s\"}'" %userID)
     error = os.system(a)
     errorCheck(error)
 
@@ -189,4 +189,4 @@ def testcommands():
 
 def updateWeight(userID, weight):
 
-    os.system("curl -X POST 52.193.188.33:8080/api/v1/weight -H \"Accept: application/json\" -H \"Content-Type: application/json\" -d '{\"id\": \"%s\", \"weight\":%s}'" %(userID,weight))
+    os.system("curl -X POST 52.193.188.33:8080/api/v1/bodyScale -H \"Accept: application/json\" -H \"Content-Type: application/json\" -d '{\"id\": \"%s\", \"weight\":%s}'" %(userID,weight))
