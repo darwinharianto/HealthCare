@@ -16,7 +16,14 @@ with open(configDirectory) as file:
 
 print(config)
 oldConfig = config
-config = nfcctl.settingMode(config, "00000000-0000-0000-0000-000000000002")
+while True:
+    try:
+	config = nfcctl.settingMode(config, "00000000-0000-0000-0000-000000000002")
+	
+    except subprocess.CalledProcessError, e:
+        print("Settting BLE Error")
+        continue
+ 	
 if config is not None:
     buzzer.buzzer(4,2000,2,0.05)
     with open(configDirectory, mode="w") as file:
