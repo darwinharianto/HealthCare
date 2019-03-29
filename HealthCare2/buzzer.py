@@ -21,3 +21,11 @@ class ActiveBuzzer_byGPIO(object):
             GPIO.cleanup(self.pin)
             time.sleep(self.waitsec)
 
+
+""" sample
+
+buzzer = ActiveBuzzer(17, 0.5, 0, 1)
+buzzer.on()
+
+
+"""

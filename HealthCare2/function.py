@@ -3,6 +3,7 @@ import os
 import sys
 import json
 import time
+import unit
 from buzzer import ActiveBuzzer_byGPIO
 from card_reader import NFC_byUSB
 
@@ -126,3 +127,14 @@ def sequence_complate(id):
 # select unit
 #
 
+def select_unit(unitname):
+    unit= None
+    if(unitname == "Entrance"):
+        unit = unit.Entrance()
+    elif(unitname == "Exit"):
+        unit = unit.Exit()
+    elif(unitname == "BodyScale"):
+        unit = unit.BodyScale()
+
+
+    return unit

@@ -1,148 +1,149 @@
-import subprocess
-import binascii
 import re
-import os
 import time
+from bluepy import btle
+from bluepy.btle import Scanner
+from bluepy.btle import DefaultDelegate
+
+
+gBLEScanner = None
+gBLEDevices = []
 
 
 #
-# encode function
+# scan delegate class
 #
-def hexstr(data):
-    chars = [c.encode("hex") for c in data]
-    str = ""
-    for char in chars:
-        str += char + " "
-    return str
+class ScanDelegate(DefaultDelegate):
 
 
-#
-# select most dBm device
-#
-def best_device_mac(devs):
+    def __init__(self):
+        DefaultDelegate.__init__(self)
 
-    ### get best device ###
-    best_index = None
-    best_dBm = 100
-    for i, dev in enumerate(devs):
 
-        ### regex ###
-        r = re.compile("([0-9]+) dBm")
-        m = r.search(dev)
-        dBm = int(m.group(1))
-
-        ### check best dBm ###
-        if best_dBm > dBm:
-            best_dBm = dBm
-            best_index = i
-    bestDev = devs[best_index]
-
-    ### get best device mac address ###
-    r = re.compile("(\w\w:\w\w:\w\w:\w\w:\w\w:\w\w)")
-    m = r.search(bestDev)
-    bestDevMac = m.group(0)
-    return bestDevMac;
+    def handleDiscovery(self, dev, isNewDev, isNewData):
+        global gBLEDevices
+        global gBLEScanner
+        if isNewDev:
+            for (_, desc, value) in dev.getScanData():
+                m = re.match("\w\w\w\w\w\w\w\w-\w\w\w\w-\w\w\w\w-\w\w\w\w-\w\w\w\w\w\w\w\w\w\w\w\w", value)
+                if m:
+                    gBLEDevices.append([dev.addr, dev.addrType, dev.rssi, value])
 
 
 #
-# find service handle
+# ble device class
 #
-def find_service_handle(mac, uuid):
-
-    ### scan service ###
-    cmd = ["sudo", "gatttool", "-t", "random", "-b", mac, "--char-desc"]
-    output = subprocess.check_output(cmd);
-
-    ### check output ###
-    # TODO
-
-    ### split output ###
-    services = output.split("\n")
-
-    ### find uuid ###
-    handle = None
-    for service in services:
-        if uuid in service:
-            m = re.compile("(0x[0-9]*),").search(service)
-            handle = m.group(0)
-    return handle
+class Device(object):
+    def __init__(self, addr, addrType, rssi, uuid):
+        self.addr = addr
+        self.addrType = addrType
+        self.rssi = rssi
+        self.uuid = uuid
 
 
 #
-# BLE class
+# ble Central class
 #
-class BLE(object):
+class Central(object):
 
 
-    def scan(self, uuid):
-        ### get BLE list ###
-        cmd = ["sudo", "blescan", "-t", "1"]
-        bleDevs = subprocess.check_output(cmd)
+    mPeripheral = None
 
-        ### check list string ###
-        if not (("Device" in bleDevs) and ("dBm" in bleDevs)):
-            raise AttributeError("scrayping failed.")
 
-        ### data split ###
-        bleDevs = bleDevs.split("Device")
+    def __init__(self):
+        global gBLEScanner
+        global gBLEDevices
+        gBLEScanner = Scanner().withDelegate(ScanDelegate())
+        gBLEDevices = []
 
-        ### get target info ###
-        targetDevs = []
-        for bleDev in bleDevs:
-            if uuid in bleDev:
-                targetDevs.append(bleDev)
 
-        ### check exists, target device ###
-        if len(targetDevs) <= 0:
+    def scan(self, uuid, timeout=0.15, autoloop=False):
+        global gBLEScanner
+        global gBLEDevices
+        targetUUID = uuid
+
+        # scan service
+        gBLEDevices = []
+        gBLEScanner.scan(timeout)
+        matchDevs = []
+        if not (gBLEDevices == []):
+
+            # check match uuid
+            for i in range(len(gBLEDevices)):
+                addr = gBLEDevices[i][0]
+                type = gBLEDevices[i][1]
+                rssi = gBLEDevices[i][2]
+                uuid = gBLEDevices[i][3]
+                m = re.match(uuid, targetUUID)
+                if m:
+                    matchDevs.append(Device(addr, type, rssi, uuid))
+
+        # check hit device
+        if matchDevs == []:
             return None
-
-        return targetDevs;
-
-
-    def select_best_device(self, devs):
-        ### get best device ###
-        best_index = None
-        best_dBm = 100
-        for i, targetDev in enumerate(targetDevs):
-
-            ### regex ###
-            r = re.compile("([0-9]+) dBm")
-            m = r.search(targetDev)
-            dBm = int(m.group(1))
-
-            ### check best dBm ###
-            if best_dBm > dBm:
-                best_dBm = dBm
-                best_index = i
-        bestDev = targetDevs[best_index]
-        print(bestDev)
-
-	### get best device mac address ###
-        r = re.compile("(\w\w:\w\w:\w\w:\w\w:\w\w:\w\w)")
-        m = r.search(bestDev)
-        bestDevMac = m.group(0)
-        return bestDevMac;
+        else:
+            return matchDevs
 
 
-
-    def send(self, msg, mac, ):
-        cmd = ["sudo", "gatttool", "-t", "random", "-b", mac, "--char-write-req", ]
-
+    def connectTo(self, dev):
+        self.mPeripheral = btle.Peripheral(dev.addr, dev.addrType)
 
 
-"""
-SERVICE_UUID = "00000000-0000-0000-0000-000000000001"
-CHARACTERISTIC_UUID = "00000000-0000-0000-0000-000000000002"
-ble = BLE()
-devs = ble.scan(SERVICE_UUID)
-if devs is None:
-    print("service not found.")
+    def disconnect(self):
+        if self.mPeripheral is None:
+            self.mPeripheral.disconnect()
+            self.mPeripheral = None
 
+
+    # get characteristic handle 
+    # uuid --> chracteristic uuid
+    def getHandle(self, uuid):
+        if not (self.mPeripheral is None):
+            descs = self.mPeripheral.getDescriptors()
+            for desc in descs:
+                m = re.match(str(desc.uuid), uuid)
+                if m:
+                    return desc.handle
+
+
+    def writeCharacteristic(self, handle, data):
+        if not (self.mPeripheral is None):
+            self.mPeripheral.writeCharacteristic(handle, data, True)
+
+
+    def readCharacteristic(self, uuid):
+        recv = None
+        if not (self.mPeripheral is None):
+            recv = self.mPeripheral.readCharacteristic(handle)
+
+        return recv
+
+
+
+
+
+
+
+""" sample
+
+central = Central()
+while True:
+    devs = central.scan("00000000-0000-0000-0000-000000000000")
+    if not devs == None:
+        break
+
+central.connectTo(devs[0])
+handle = central.getHandle("00000000-0000-0000-0000-000000000001")
+
+print("write")
+central.writeCharacteristic(handle, b"BodyWeight")
+
+print("read")
+data = central.readCharacteristic(handle)
+if data is None:
+    print("None")
 else:
-    mac = best_device_mac(devs)
-    if mac is None:
-        print("this uuid is not exists.")
-    else:
-        handle = find_service_handle(mac, CHARACTERISTIC_UUID)
-        print(handle)
+    print(data)
+
+central.disconnect()
+
 """

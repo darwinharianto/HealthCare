@@ -29,9 +29,10 @@ class NFC_byUSB(object):
         finally:
             clf.close()
 
+
 # ----------------------------------------------------------------------- #
 
-class CardReader_GPIO:
+class NFC_byGPIO:
 
     def read_wait(self):
         self.connect()
@@ -52,3 +53,15 @@ class CardReader_GPIO:
 	        break;
 	    except:
         self.on_connect();
+
+
+
+""" sample
+
+(ret, id) = NFC_byUSB().read_wait()
+
+ret... success or failed
+id ... id
+
+
+"""
