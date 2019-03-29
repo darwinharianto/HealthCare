@@ -29,21 +29,25 @@ class NFC_byUSB(object):
             clf.close()
 
 # ----------------------------------------------------------------------- #
-
 class CardReader_GPIO:
-    
+
     def read_wait(self):
         self.connect()
         return True, self.idm
-        
-    
+
+
     def on_connect(self):
         self.proc = str(self.proc)
-        self.idm = str(str(proc.split(":")[4:5]).replace(" ", "").split("\\n")[0][2:])
-        if (not (all(c in string.hexdigits for c in idm)) OR len(idm) != 24):
+        self.idm = str(str(self.proc.split(":")[4:5]).replace(" ", "").split("\\n")[0][2:])
+        if (not (all(c in string.hexdigits for c in self.idm)) or len(self.idm) != 16):
             raise AttributeError("Not valid ID")
-        
-        
+
+
     def connect(self):
-        self.proc = subprocess.check_output(["nfc-poll"])
-        on_connect();
+        while True:
+            try:
+                self.proc = subprocess.check_output(["nfc-poll"])
+                break;
+            except:
+        self.on_connect();
+
