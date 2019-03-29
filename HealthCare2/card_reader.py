@@ -4,8 +4,9 @@ import os
 import nfc
 import time
 import binascii
+#use pn532
+import subprocess
 import string
-
 
 # ----------------------------------------------------------------------- #
 # util class
@@ -29,6 +30,7 @@ class NFC_byUSB(object):
             clf.close()
 
 # ----------------------------------------------------------------------- #
+
 class CardReader_GPIO:
 
     def read_wait(self):
@@ -45,9 +47,8 @@ class CardReader_GPIO:
 
     def connect(self):
         while True:
-            try:
+	    try:
                 self.proc = subprocess.check_output(["nfc-poll"])
-                break;
-            except:
+	        break;
+	    except:
         self.on_connect();
-

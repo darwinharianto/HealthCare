@@ -48,14 +48,12 @@ def buzzer_invalidCard():
 # system command
 #
 def reboot():
-    # TODO
     print("reboot!!")
     sys.exit()
 #    os.system("sudo reboot")
 
 
 def shutdown():
-    # TODO
     print("shutdown!!")
     sys.exit()
 #    os.system("sudo shutdown!!")
@@ -67,10 +65,8 @@ def shutdown():
 def touch_wait():
 
     while True:
-        # get NFC tag id
         ret, id = nfc.read_wait()
         if ret == False:
-            # non buzzer
             continue
         else:
             return id
@@ -81,7 +77,6 @@ def touch_wait():
 #
 def select_mode():
     mode = None
-
     try:
         file = open('config.json', 'r')
         data = json.load(file)
@@ -101,7 +96,7 @@ def check_enableTouch(id):
     global beforeID
     global beforeTime
 
-    # first touch by systemup
+    # check first touch by systemup
     if (beforeID == None) and (beforeTime == None):
         return True
 
@@ -123,12 +118,11 @@ def check_enableTouch(id):
 def sequence_complate(id):
     global beforeID
     global beforeTime
-
-    # keep id and time
     beforeID = id
     beforeTime = time.time()
 
 
 #
-# 
+# select unit
 #
+

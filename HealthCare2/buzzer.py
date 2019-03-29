@@ -20,3 +20,4 @@ class ActiveBuzzer_byGPIO(object):
             GPIO.output(self.pin, GPIO.LOW)
             GPIO.cleanup(self.pin)
             time.sleep(self.waitsec)
+

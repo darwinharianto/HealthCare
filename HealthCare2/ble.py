@@ -5,7 +5,9 @@ import os
 import time
 
 
+#
 # encode function
+#
 def hexstr(data):
     chars = [c.encode("hex") for c in data]
     str = ""
@@ -14,69 +16,133 @@ def hexstr(data):
     return str
 
 
+#
+# select most dBm device
+#
+def best_device_mac(devs):
+
+    ### get best device ###
+    best_index = None
+    best_dBm = 100
+    for i, dev in enumerate(devs):
+
+        ### regex ###
+        r = re.compile("([0-9]+) dBm")
+        m = r.search(dev)
+        dBm = int(m.group(1))
+
+        ### check best dBm ###
+        if best_dBm > dBm:
+            best_dBm = dBm
+            best_index = i
+    bestDev = devs[best_index]
+
+    ### get best device mac address ###
+    r = re.compile("(\w\w:\w\w:\w\w:\w\w:\w\w:\w\w)")
+    m = r.search(bestDev)
+    bestDevMac = m.group(0)
+    return bestDevMac;
+
+
+#
+# find service handle
+#
+def find_service_handle(mac, uuid):
+
+    ### scan service ###
+    cmd = ["sudo", "gatttool", "-t", "random", "-b", mac, "--char-desc"]
+    output = subprocess.check_output(cmd);
+
+    ### check output ###
+    # TODO
+
+    ### split output ###
+    services = output.split("\n")
+
+    ### find uuid ###
+    handle = None
+    for service in services:
+        if uuid in service:
+            m = re.compile("(0x[0-9]*),").search(service)
+            handle = m.group(0)
+    return handle
+
+
+#
 # BLE class
+#
 class BLE(object):
-    def __init__(self):
-        self.clear()
-#        self.init()
 
 
-    def _set_data(self, msg):
-        self.msg = hexstr(msg)
-        self.len = len(msg)
+    def scan(self, uuid):
+        ### get BLE list ###
+        cmd = ["sudo", "blescan", "-t", "1"]
+        bleDevs = subprocess.check_output(cmd)
+
+        ### check list string ###
+        if not (("Device" in bleDevs) and ("dBm" in bleDevs)):
+            raise AttributeError("scrayping failed.")
+
+        ### data split ###
+        bleDevs = bleDevs.split("Device")
+
+        ### get target info ###
+        targetDevs = []
+        for bleDev in bleDevs:
+            if uuid in bleDev:
+                targetDevs.append(bleDev)
+
+        ### check exists, target device ###
+        if len(targetDevs) <= 0:
+            return None
+
+        return targetDevs;
 
 
-    def clear(self):
-        self.msg = None
-        self.len = None
-        self.cmd = None
+    def select_best_device(self, devs):
+        ### get best device ###
+        best_index = None
+        best_dBm = 100
+        for i, targetDev in enumerate(targetDevs):
+
+            ### regex ###
+            r = re.compile("([0-9]+) dBm")
+            m = r.search(targetDev)
+            dBm = int(m.group(1))
+
+            ### check best dBm ###
+            if best_dBm > dBm:
+                best_dBm = dBm
+                best_index = i
+        bestDev = targetDevs[best_index]
+        print(bestDev)
+
+	### get best device mac address ###
+        r = re.compile("(\w\w:\w\w:\w\w:\w\w:\w\w:\w\w)")
+        m = r.search(bestDev)
+        bestDevMac = m.group(0)
+        return bestDevMac;
 
 
-    def init(self):
-        ### execute cmd ####
-        cmds = []
-        cmds.append("sudo hciconfig hci0 reset")
-        cmds.append("sudo invoke-rc.d bluetooth restart")
-        cmds.append("sudo hciconfig hci0 up")
-        for cmd in cmds:
-            os.system(cmd)
+
+    def send(self, msg, mac, ):
+        cmd = ["sudo", "gatttool", "-t", "random", "-b", mac, "--char-write-req", ]
 
 
-    def startAdvertise(self):
-        os.system("sudo hciconfig hci0 leadv")
 
-
-    def stopAdvertise(self):
-        os.system("sudo hciconfig hci0 noleadv")
-
-
-    def send(self, msg):
-        ### set data ###
-        self._set_data(msg)
-
-        ### struct cmd ###
-        cmds = []
-#        cmds.append("sudo hciconfig hci0 leadv")
-        cmds.append("sudo hcitool -i hci0 cmd 0x08 0x0008 {0:02x} 02 01 1a {1:02x} ff 18 01 {2}".format(self.len + 1, self.len + 3, self.msg))
-        
-#        cmds.append("sudo hcitool -i hci0 cmd 0x08 0x0008 " + str(self.len + 1) + " 02 01 1a " + "{0:02x}".format(self.len + 3) + " ff 18 01 " +  self.msg)
-        cmds.append("sudo hciconfig hci0 leadv 0")
-
-        ### execute cmd ###
-        for cmd in cmds:
-            print("Command: {}".format(cmd))
-            os.system(cmd)
-
-        ### send complate ####
-        self.clear()
-
-
+"""
+SERVICE_UUID = "00000000-0000-0000-0000-000000000001"
+CHARACTERISTIC_UUID = "00000000-0000-0000-0000-000000000002"
 ble = BLE()
-ble.init()
+devs = ble.scan(SERVICE_UUID)
+if devs is None:
+    print("service not found.")
 
-ble.startAdvertise()
-for i in range(2):
-    ble.send("testaaaaaaa")
-    time.sleep(5)
-ble.stopAdvertise()
-
+else:
+    mac = best_device_mac(devs)
+    if mac is None:
+        print("this uuid is not exists.")
+    else:
+        handle = find_service_handle(mac, CHARACTERISTIC_UUID)
+        print(handle)
+"""
