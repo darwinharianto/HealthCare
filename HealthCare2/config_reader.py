@@ -22,7 +22,6 @@ class ConfigReader(object):
         except:
             print("write error occured")
 
-test = ConfigReader("/home/pi/HealthCare/HealthCare2/config.txt").write_config("{\"MODE\":\"BodyScale\"}")
 """ sample
 test = ConfigReader("/home/pi/HealthCare/HealthCare2/config.txt").read_config()
 test = ConfigReader("/home/pi/HealthCare/HealthCare2/config.txt").write_config("Body Weight")
