@@ -11,15 +11,6 @@ def debug_print(msg):
 #
 debug_print("system up.")
 
-#check Available Reader
-fnc.check_availableReader()
-if fnc.nfc == None:
-    # critical error
-    print("No reader detected")
-    fnc.buzzer_systemdown()
-    fnc.shutdown()
-    
-
 #
 # TODO check config mode
 #
@@ -56,10 +47,19 @@ time.sleep(2)
 while True:
     id = None
 
+    #check Available Reader
+    fnc.check_availableReader()
+    if fnc.nfc == None:
+        # critical error
+        print("No reader detected")
+        fnc.buzzer_systemdown()
+        fnc.shutdown()
+        
     try:
         ### read id ###
         print("touch card.")
         id = fnc.touch_wait()
+        fnc.buzzer_complated()
 
         ### check enable touch ###
         if not fnc.check_enableTouch(id):

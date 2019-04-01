@@ -6,6 +6,7 @@ import json
 import time
 import unit
 import subprocess
+from ble import Central
 from config_reader import ConfigReader
 from buzzer import Buzzer_ByGPIO
 from card_reader import NFC_byUSB
@@ -156,30 +157,28 @@ def config_setting():
     beforeTime = time.time()
     #get setting
     ### get weight ###
-    central = ble.Central()
-    print("read previous config")
+    central = Central()
     configReader = ConfigReader("/home/pi/HealthCare/HealthCare2/config.txt")
     config = configReader.read_config()
     print("wait 30 secs for setting config")
     while True:
         devs = central.scan("00000000-0000-0000-0000-000000000001")
         if time.time()-beforeTime > 30:
-            break
+            return
         if not devs == None:
-            print("found config set")
-            central.connectTo(devs[0])
-            handle = central.getHandle("00000000-0000-0000-0000-000000000001")
-            print("read", handle)
-            print(config)
-            central.writeCharacteristic(handle, bytes(config))
-            data = central.readCharacteristic(handle)
             break
+    print("found config set")
+    central.connectTo(devs[0])
+    handle = central.getHandle("00000000-0000-0000-0000-000000000001")
+    central.writeCharacteristic(handle, bytes(config))
+    data = central.readCharacteristic(handle)
     if data is None:
         print("None")
+        return
     else:
         print(data)
+        configReader.write_config(data)
     central.disconnect()
-    configReader.write_config(data)
 
 #
 # select unit
@@ -193,4 +192,6 @@ def select_unit(unitname):
         unitMode = unit.Exit()
     elif(unitname == "BodyScale"):
         unitMode = unit.BodyScale()
+    elif(unitname == "Apply"):
+        unitMode = unit.Apply()
     return unitMode

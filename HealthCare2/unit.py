@@ -40,6 +40,22 @@ class Entrance(Unit):
         return ret
 
 
+#
+# Application
+#
+class Apply(Unit):
+
+    def __init__(self):
+        super(Apply, self).__init__("apply")
+
+
+    def action(self, id):
+        json = "{\"%s\":\"%s\", \"%s\":\"%s\", \"%s\":%s}"%("id", id, "name", "sawada", "io", 0)
+        ret = self.sendServer(self.name, json)
+        return ret
+
+
+
 
 #
 # Exit

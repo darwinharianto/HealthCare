@@ -119,17 +119,16 @@ class Central(object):
 
 
 
-
-""" sample
+"""
 
 central = Central()
 while True:
-    devs = central.scan("00000000-0000-0000-0000-000000000002")
+    devs = central.scan("00000000-0000-0000-0000-000000000001")
     if not devs == None:
         break
 
 central.connectTo(devs[0])
-handle = central.getHandle("00000000-0000-0000-0000-000000000002")
+handle = central.getHandle("00000000-0000-0000-0000-000000000001")
 
 print("write")
 central.writeCharacteristic(handle, b"BodyWeight")
