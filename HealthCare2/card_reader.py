@@ -32,7 +32,7 @@ class NFC_byUSB(object):
 
 # ----------------------------------------------------------------------- #
 
-class NFC_byGPIO:
+class NFC_byGPIO(object):
 
     def read_wait(self):
         self.connect()
@@ -52,7 +52,8 @@ class NFC_byGPIO:
                 self.proc = subprocess.check_output(["nfc-poll"])
 	        break;
 	    except:
-        self.on_connect();
+                print("Device Not Found")
+        self.on_connect()
 
 
 

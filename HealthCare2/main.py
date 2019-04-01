@@ -1,6 +1,6 @@
 # main.py
 import unit
-import time 
+import time
 import function as fnc
 
 def debug_print(msg):
@@ -11,24 +11,40 @@ def debug_print(msg):
 #
 debug_print("system up.")
 
+#check Available Reader
+fnc.check_availableReader()
+if fnc.nfc == None:
+    # critical error
+    print("No reader detected")
+    fnc.buzzer_systemdown()
+    fnc.shutdown()
+    
 
 #
 # TODO check config mode
 #
+print("start reading config")
+fnc.config_setting()
+
 debug_print("sequence: check config mode.")
 fnc.sequenceBuzzer_systemup()
-
+debug_print("systemup sound")
+time.sleep(2)
 
 #
 # select unit
 #
-unit = unit.BodyScale()
-print(unit.name)
-#debug_print("sequence: select mode")
-#unit = fnc.select_unit()
-#if not mode is None:
-#    fnc.buzzer_systemdown()
-#    fnc.reboot()
+
+
+
+#unit = unit.BodyScale()
+#print(unit.name)
+debug_print("sequence: select mode")
+unitMode = fnc.select_mode()
+unit = fnc.select_unit(unitMode)
+if unitMode is None:
+    fnc.buzzer_systemdown()
+    fnc.reboot()
 
 
 #
@@ -36,6 +52,7 @@ print(unit.name)
 #
 debug_print("sequence: action start.")
 fnc.sequenceBuzzer_actionStart()
+time.sleep(2)
 while True:
     id = None
 
@@ -63,7 +80,7 @@ while True:
     except AttributeError as e:
          # can't read nfc tag
          fnc.buzzer_invalidCard()
-#         print(e)
+         print(e)
          continue
 
     except Exception as e:

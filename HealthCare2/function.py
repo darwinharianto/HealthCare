@@ -1,14 +1,18 @@
 # function.py
 import os
 import sys
+import ble
 import json
 import time
 import unit
-from buzzer import ActiveBuzzer_byGPIO
+import subprocess
+from config_reader import ConfigReader
+from buzzer import Buzzer_ByGPIO
 from card_reader import NFC_byUSB
+from card_reader import NFC_byGPIO
 
 # const param
-BUZZER_PIN = 17
+BUZZER_PIN = 4
 
 
 # global object
@@ -21,28 +25,36 @@ beforeTime = None
 # sequence buzzer 
 #
 def sequenceBuzzer_systemup():
-    ActiveBuzzer_byGPIO(BUZZER_PIN, 0.5, 0.5).on()
-    ActiveBuzzer_byGPIO(BUZZER_PIN, 0.05, 0.05, 1).on()
+    Buzzer_ByGPIO(BUZZER_PIN, 2000, 1, 0.5).on()
+    Buzzer_ByGPIO(BUZZER_PIN, 2000, 1, 0.05).on()
+    #ActiveBuzzer_byGPIO(BUZZER_PIN, 0.5, 0.5).on()
+    #ActiveBuzzer_byGPIO(BUZZER_PIN, 0.05, 0.05, 1).on()
 
 
 def sequenceBuzzer_actionStart():
-    ActiveBuzzer_byGPIO(BUZZER_PIN, 0.5, 0.5).on()
-    ActiveBuzzer_byGPIO(BUZZER_PIN, 0.05, 0.05, 2).on()
+    Buzzer_ByGPIO(BUZZER_PIN, 2000, 1, 0.5).on()
+    Buzzer_ByGPIO(BUZZER_PIN, 2000, 2, 0.05).on()
+    #ActiveBuzzer_byGPIO(BUZZER_PIN, 0.5, 0.5).on()
+    #ActiveBuzzer_byGPIO(BUZZER_PIN, 0.05, 0.05, 2).on()
 
 
 #
 # message buzzer
 #
 def buzzer_systemdown():
-    ActiveBuzzer_byGPIO(BUZZER_PIN, 1.5).on()
+    Buzzer_ByGPIO(BUZZER_PIN, 2000, 1, 1.5).on()
+    #ActiveBuzzer_byGPIO(BUZZER_PIN, 1.5).on()
 
 
 def buzzer_complated():
-    ActiveBuzzer_byGPIO(BUZZER_PIN, 0.05, 0.1, 1).on()
+    Buzzer_ByGPIO(BUZZER_PIN, 2000, 1, 0.05).on()
+    #ActiveBuzzer_byGPIO(BUZZER_PIN, 0.05, 0.1, 1).on()
 
 def buzzer_invalidCard():
-    ActiveBuzzer_byGPIO(BUZZER_PIN, 0.05, 0.1, 1).on()
-    ActiveBuzzer_byGPIO(BUZZER_PIN, 0.25, 0.1, 1).on()
+    Buzzer_ByGPIO(BUZZER_PIN, 2000, 2, 0.05).on()
+    Buzzer_ByGPIO(BUZZER_PIN, 2000, 2, 0.25).on()
+    #ActiveBuzzer_byGPIO(BUZZER_PIN, 0.05, 0.1, 1).on()
+    #ActiveBuzzer_byGPIO(BUZZER_PIN, 0.25, 0.1, 1).on()
 
 
 #
@@ -64,7 +76,8 @@ def shutdown():
 # read nfc card
 #
 def touch_wait():
-
+    #check which reader is available
+    
     while True:
         ret, id = nfc.read_wait()
         if ret == False:
@@ -72,16 +85,25 @@ def touch_wait():
         else:
             return id
 
-
+def check_availableReader():
+    global nfc
+    usb_list = subprocess.check_output(['lsusb'])
+    NFC_list = subprocess.check_output(['i2cdetect', '-y', '1'])
+    if "Sony Corp." in usb_list:
+        nfc = NFC_byUSB()
+        print("Pasori detected")
+    elif "24" in NFC_list:
+        nfc = NFC_byGPIO()
+        print("PN532 detected")
+    else:
+        nfc = None
 #
 # get mode
 #
 def select_mode():
     mode = None
     try:
-        file = open('config.json', 'r')
-        data = json.load(file)
-        mode = data["MODE"]
+        mode = ConfigReader("/home/pi/HealthCare/HealthCare2/config.txt").read_config()
     except IOError as e:
         pass
     except AttributeError as e:
@@ -124,17 +146,51 @@ def sequence_complate(id):
 
 
 #
+# check for setting signal
+#
+
+def config_setting():
+    
+    global beforeID
+    global beforeTime
+    beforeTime = time.time()
+    #get setting
+    ### get weight ###
+    central = ble.Central()
+    print("read previous config")
+    configReader = ConfigReader("/home/pi/HealthCare/HealthCare2/config.txt")
+    config = configReader.read_config()
+    print("wait 30 secs for setting config")
+    while True:
+        devs = central.scan("00000000-0000-0000-0000-000000000001")
+        if time.time()-beforeTime > 30:
+            break
+        if not devs == None:
+            print("found config set")
+            central.connectTo(devs[0])
+            handle = central.getHandle("00000000-0000-0000-0000-000000000001")
+            print("read", handle)
+            print(config)
+            central.writeCharacteristic(handle, bytes(config))
+            data = central.readCharacteristic(handle)
+            break
+    if data is None:
+        print("None")
+    else:
+        print(data)
+    central.disconnect()
+    configReader.write_config(data)
+
+#
 # select unit
 #
 
 def select_unit(unitname):
-    unit= None
+    unitMode= None
     if(unitname == "Entrance"):
-        unit = unit.Entrance()
+        unitMode = unit.Entrance()
     elif(unitname == "Exit"):
-        unit = unit.Exit()
+        unitMode = unit.Exit()
     elif(unitname == "BodyScale"):
-        unit = unit.BodyScale()
-
-
-    return unit
+        unitMode = unit.BodyScale()
+    return unitMode

@@ -110,7 +110,7 @@ class Central(object):
             self.mPeripheral.writeCharacteristic(handle, data, True)
 
 
-    def readCharacteristic(self, uuid):
+    def readCharacteristic(self, handle):
         recv = None
         if not (self.mPeripheral is None):
             recv = self.mPeripheral.readCharacteristic(handle)
@@ -120,19 +120,40 @@ class Central(object):
 
 
 
-
-
-
 """ sample
 
 central = Central()
 while True:
-    devs = central.scan("00000000-0000-0000-0000-000000000000")
+    devs = central.scan("00000000-0000-0000-0000-000000000002")
     if not devs == None:
         break
 
 central.connectTo(devs[0])
-handle = central.getHandle("00000000-0000-0000-0000-000000000001")
+handle = central.getHandle("00000000-0000-0000-0000-000000000002")
+
+print("write")
+central.writeCharacteristic(handle, b"BodyWeight")
+
+print("read")
+data = central.readCharacteristic(handle)
+if data is None:
+    print("None")
+else:
+    print(data)
+
+central.disconnect()
+
+
+
+
+central = Central()
+while True:
+    devs = central.scan("00000000-0000-0000-0000-000000000002")
+    if not devs == None:
+        break
+
+central.connectTo(devs[0])
+handle = central.getHandle("00000000-0000-0000-0000-000000000002")
 
 print("write")
 central.writeCharacteristic(handle, b"BodyWeight")

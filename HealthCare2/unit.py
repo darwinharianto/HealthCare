@@ -68,10 +68,22 @@ class BodyScale(Unit):
 
     def action(self, id):
         ### get weight ###
-        weight = 10
-
+        central = ble.Central()
+        while True:
+            devs = central.scan("00000000-0000-0000-0000-000000000002")
+            if not devs == None:
+                break
+        central.connectTo(devs[0])
+        handle = central.getHandle("00000000-0000-0000-0000-000000000002")
+        print("read", handle)
+        data = central.readCharacteristic(handle)
+        if data is None:
+            print("None")
+        else:
+            print(data)
+        central.disconnect()
         ### send server ###
-        json = "{\"%s\":\"%s\", \"%s\":\"%s\"}"%("id", id, "weight", weight)
+        json = "{\"%s\":\"%s\", \"%s\":\"%s\"}"%("id", id, "weight", data)
         ret = self.sendServer(self.name, json)
         return ret
 
