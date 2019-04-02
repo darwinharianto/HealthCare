@@ -170,8 +170,8 @@ def config_setting():
     print("found config set")
     central.connectTo(devs[0])
     handle = central.getHandle("00000000-0000-0000-0000-000000000001")
-    central.writeCharacteristic(handle, bytes(config))
     data = central.readCharacteristic(handle)
+    central.writeCharacteristic(handle, bytes(data))
     if data is None:
         print("None")
         return
