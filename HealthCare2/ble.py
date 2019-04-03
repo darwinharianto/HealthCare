@@ -7,16 +7,20 @@ from bluepy.btle import DefaultDelegate
 
 gBLEScanner = None
 gBLEDevices = []
+gBLENotifyData = None
 
 
 #
 # scan delegate class
 #
-class ScanDelegate(DefaultDelegate):
-
-
+class ScanDelegate(btle.DefaultDelegate):
     def __init__(self):
-        DefaultDelegate.__init__(self)
+        btle.DefaultDelegate.__init__(self)
+
+    def handleNotification(self, cHandle, data):
+        print("A notification was received: %s" %data)
+        global gBLENotifyData
+        gBLENotifyData = data
 
 
     def handleDiscovery(self, dev, isNewDev, isNewData):
@@ -24,10 +28,10 @@ class ScanDelegate(DefaultDelegate):
         global gBLEScanner
         if isNewDev:
             for (_, desc, value) in dev.getScanData():
-                m = re.match("\w\w\w\w\w\w\w\w-\w\w\w\w-\w\w\w\w-\w\w\w\w-\w\w\w\w\w\w\w\w\w\w\w\w", value)
+                #m = re.match("\w\w\w\w\w\w\w\w-\w\w\w\w-\w\w\w\w-\w\w\w\w-\w\w\w\w\w\w\w\w\w\w\w\w", value)
+                m = re.match("\w{8}-\w{4}-\w{4}-\w{4}-\w{12}", value)
                 if m:
                     gBLEDevices.append([dev.addr, dev.addrType, dev.rssi, value])
-
 
 #
 # ble device class
@@ -47,7 +51,6 @@ class Central(object):
 
 
     mPeripheral = None
-
 
     def __init__(self):
         global gBLEScanner
@@ -89,7 +92,7 @@ class Central(object):
 
 
     def disconnect(self):
-        if self.mPeripheral is None:
+        if self.mPeripheral is not None:
             self.mPeripheral.disconnect()
             self.mPeripheral = None
 
@@ -97,6 +100,7 @@ class Central(object):
     # get characteristic handle 
     # uuid --> chracteristic uuid
     def getHandle(self, uuid):
+        
         if not (self.mPeripheral is None):
             descs = self.mPeripheral.getDescriptors()
             for desc in descs:
@@ -116,11 +120,59 @@ class Central(object):
             recv = self.mPeripheral.readCharacteristic(handle)
 
         return recv
+    
+    
+    def getNotify(self, service_uuid, char_uuid, sec):
+        global gBLENotifyData
+        gBLENotifyData = None
+        self.mPeripheral.setDelegate(ScanDelegate())
+
+        svc = self.mPeripheral.getServiceByUUID(service_uuid)
+        ch = svc.getCharacteristics(char_uuid)[0]
+        self.mPeripheral.writeCharacteristic(ch.valHandle+1, "\x01\x00")
+        loopCount = 0
+        while True:
+            loopCount += 1
+            if self.mPeripheral.waitForNotifications(1.0):
+                print("get notif")
+                data = gBLENotifyData
+                print("notify data = ", data)
+                break
+            print("waiting")
+            if loopCount == sec:
+                break
+        return gBLENotifyData
+    
+    
+        
+""" notify example
+central = Central()
+while True:
+    devs = central.scan("00000000-0000-0000-0000-000000000001")
+    if not devs == None:
+        break
 
 
+central.connectTo(devs[0])
+central.mPeripheral.setDelegate(ScanDelegate())
 
+handle = central.getHandle("00000000-0000-0000-0000-000000000001")
+svc = central.mPeripheral.getServiceByUUID("00000000-0000-0000-0000-000000000001")
+ch = svc.getCharacteristics("00000000-0000-0000-0000-000000000001")[0]
+print(ch)
+#central.writeCharacteristic(handle, "\x01\x00")
+central.mPeripheral.writeCharacteristic(ch.valHandle+1, "\x01\x00")
+#ch = ch.valHandle+1
+#ch.write("\x01\x00")
+while True:
+    if central.mPeripheral.waitForNotifications(1.0):
+        print("get notif")
+        data = central.getNotify()
+        print("notify data = ", data)
+        continue
+    print("waiting")
 """
-
+"""
 central = Central()
 while True:
     devs = central.scan("00000000-0000-0000-0000-000000000001")

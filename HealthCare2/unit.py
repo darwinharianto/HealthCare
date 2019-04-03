@@ -93,6 +93,8 @@ class BodyScale(Unit):
         handle = central.getHandle("00000000-0000-0000-0000-000000000002")
         print("read", handle)
         data = central.readCharacteristic(handle)
+        message = "found you"
+        central.writeCharacteristic(handle, bytes(message))
         if data is None:
             print("None")
         else:
