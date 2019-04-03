@@ -171,8 +171,11 @@ def config_setting():
         return
     central.connectTo(devs[0])
     data = central.getNotify("00000000-0000-0000-0000-000000000001","00000000-0000-0000-0000-000000000001",30)
+    Buzzer_ByGPIO(BUZZER_PIN, 2000, 1, 0.05).on()
     if data is None:
         data = config
+    #
+    #handle = central.getHandle("00000000-0000-0000-0000-000000000001")
     #send config to phone
     #central.writeCharacteristic(handle, bytes(data))
     if data is None:

@@ -127,14 +127,13 @@ class Central(object):
         gBLENotifyData = None
         self.mPeripheral.setDelegate(ScanDelegate())
 
-        svc = self.mPeripheral.getServiceByUUID(service_uuid)
-        ch = svc.getCharacteristics(char_uuid)[0]
+        svc = self.mPeripheral.getServiceByUUID("00000000-0000-0000-0000-000000000001")
+        ch = svc.getCharacteristics("00000000-0000-0000-0000-000000000001")[0]
         self.mPeripheral.writeCharacteristic(ch.valHandle+1, "\x01\x00")
         loopCount = 0
         while True:
             loopCount += 1
             if self.mPeripheral.waitForNotifications(1.0):
-                print("get notif")
                 data = gBLENotifyData
                 print("notify data = ", data)
                 break
