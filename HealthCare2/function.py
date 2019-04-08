@@ -151,33 +151,26 @@ def sequence_complate(id):
 #
 
 def config_setting():
-    #read current config
+    
+    global beforeID
+    global beforeTime
+    beforeTime = time.time()
+    ### get setting ###
+    central = Central()
     configReader = ConfigReader("/home/pi/HealthCare/HealthCare2/config.txt")
     config = configReader.read_config()
-    
-    central = Central()
-    
-    #search for beacon for 30 secs
-    timeBefore = time.time()
-    settingMode = False
+    print("wait 30 secs for setting config")
     while True:
         devs = central.scan("00000000-0000-0000-0000-000000000001")
+        if time.time()-beforeTime > 30:
+            return
         if not devs == None:
-            settingMode = True
             break
-        if (time.time()-timeBefore > 30):
-            break
-    if not settingMode:
-        return
+    print("found config set")
     central.connectTo(devs[0])
-    data = central.getNotify("00000000-0000-0000-0000-000000000001","00000000-0000-0000-0000-000000000001",30)
-    Buzzer_ByGPIO(BUZZER_PIN, 2000, 1, 0.05).on()
-    if data is None:
-        data = config
-    #
-    #handle = central.getHandle("00000000-0000-0000-0000-000000000001")
-    #send config to phone
-    #central.writeCharacteristic(handle, bytes(data))
+    handle = central.getHandle("00000000-0000-0000-0000-000000000001")
+    central.writeCharacteristic(handle, bytes(config))
+    data = central.readCharacteristic(handle)
     if data is None:
         print("None")
         return
