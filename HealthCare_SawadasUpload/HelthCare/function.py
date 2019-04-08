@@ -155,8 +155,7 @@ def config_setting():
     global beforeID
     global beforeTime
     beforeTime = time.time()
-    #get setting
-    ### get weight ###
+    ### get setting ###
     central = Central()
     configReader = ConfigReader("/home/pi/HealthCare/HealthCare2/config.txt")
     config = configReader.read_config()
