@@ -127,7 +127,7 @@ def config():
 
 def nfc_read():
     global ID
-    debug_string("plase touch tag.")
+    debug_string("please touch tag.")
     ID = NFC.read_wait()
     
     
