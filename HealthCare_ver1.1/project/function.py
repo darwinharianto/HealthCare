@@ -4,6 +4,7 @@ import time
 import json
 import blelib
 from utility.buzzer import ActiveBuzzer
+from utility.timer import Timer
 
 # const value
 CONFIG_WAITTIME= 5
@@ -123,12 +124,13 @@ def config():
     debug_string("save config.")
     mode = BLE.readNotify()
     save_mode(mode)
-
+            
 
 def nfc_read():
     global ID
-    debug_string("plase touch tag.")
-    ID = NFC.read_wait()
+    debug_string("please touch tag.")
+    currentID = NFC.read_wait()
+    
     
     
 def mode_sequence():
@@ -140,10 +142,11 @@ if __name__ == "__main__":
     try:
         config()
         load_mode()
+
         while True:
-            nfc_read()
+            nfc_read():
             mode_sequence()
-        
+
     except IOError as e:
         buzzer_systemdown()
         shutdown()
