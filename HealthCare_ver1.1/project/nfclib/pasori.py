@@ -21,7 +21,7 @@ class Pasori(object):
     def _connect(self):
         try:
             clf = NFC.ContactlessFrontend('usb')
-            clf._connect(rdwr={'on-connect': self._on_connect})
+            clf.connect(rdwr={'on-connect': self._on_connect})
             clf.close()
         except IOError as e:
             raise NFC_DeviceNotFound()
